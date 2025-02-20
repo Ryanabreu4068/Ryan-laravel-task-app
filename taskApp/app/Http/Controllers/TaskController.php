@@ -4,31 +4,44 @@ use App\Models\Task;
 use Illuminate\Http\Request;
 class TaskController extends Controller
 {
-/**
-* Display a listing of tasks.
-*/
-public function index()
+
+public function index(Request $request)
 {
-// Get all tasks
-$tasks = Task::all();
-// Return a view (e.g., resources/views/tasks/index.blade.php)
-// with the tasks data
-return view('tasks.index', compact('tasks'));
+$search = $request->input('search');
+$sort = $request->input('sort');
+$query = Task::query();
+if (!empty($search)) {
+$query->where(function($q) use ($search) {
+$q->where('task_name', 'like', '%'.$search.'%')
+->orWhere('task_location', 'like', '%'.$search.'%')
+->orWhere('category', 'like', '%'.$search.'%')
+->orWhere('materials_required', 'like', '%'.$search.'%');
+});
 }
-/**
-* Show the form for creating a new task.
-*/
+switch ($sort) {
+case 'deadline':
+$query->orderBy('deadline', 'asc');
+break;
+case 'task_name':
+$query->orderBy('task_name', 'asc');
+break;
+case 'category':
+$query->orderBy('category', 'asc');
+break;
+default:
+$query->orderBy('task_name', 'asc');
+}
+$tasks = $query->get();
+return view('tasks.index', compact('tasks', 'search', 'sort'));
+}
+
 public function create()
 {
-// Return a view to create a new task
 return view('tasks.create');
 }
-/**
-* Store a newly created task.
-*/
+
 public function store(Request $request)
 {
-// Validate the request
 $validated = $request->validate([
 'task_name' => 'required|string|max:255',
 'task_location' => 'nullable|string|max:255',
@@ -39,35 +52,26 @@ $validated = $request->validate([
 'category' => 'nullable|string|max:255',
 ]);
 Task::create($validated);
-// Redirect or return
 return redirect()->route('tasks.index')->with('success', 'Task created successfully!');
 }
-/**
-* Display a specific task.
-*/
+
 public function show(Task $task)
 {
-return view('tasks.show', compact('task'));
+    return view('task.show', compact('task'));
 }
-/**
-* leave the following empty for now
-*/
-public function edit(Task $task)
+
+public function edit(string $id)
 {
-//
+    $task = Task::findOrFail($id);
 }
-/**
-* Update the specified task.
-*/
-public function update(Request $request, Task $task)
+
+public function update(Request $request, string $id)
 {
-//
-}
-/**
-* Remove the specified task.
-*/
-public function destroy(Task $task)
-{
-//
-}
-}
+    $validated = $request->validate([
+        'task_name' => 'required|string|max:255',
+        'task_location' => 'nullable|string|max:255',
+        'time-complexity' => 'nullable|string',
+        'deadline' => 'nullable| date',
+
+
+
