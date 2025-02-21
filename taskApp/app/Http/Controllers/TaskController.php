@@ -72,6 +72,22 @@ public function update(Request $request, string $id)
         'task_location' => 'nullable|string|max:255',
         'time-complexity' => 'nullable|string',
         'deadline' => 'nullable| date',
+        'priority' => 'nullable|integer|min:1|max:3',
+'category' => 'nullable|string|max:255',
+]);
+$task = Task::findOrFail($id);
+$task->update($validated);
+return redirect()->route('tasks.index')->with('success', 'Task updated successfully!');
+}
+
+public function destroy(string $id)
+{
+$task = Task::findOrFail($id);
+$task->delete();
+return redirect()->route('tasks.index')->with('success', 'Task deleted successfully!');
+    }
+}
+
 
 
 
